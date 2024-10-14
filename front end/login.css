@@ -1,0 +1,62 @@
+body {
+    background-color: azure;
+}
+
+.login {
+    background-color: azure;
+    width: 400px;
+    padding-bottom: 20px;
+    margin: 20px;
+    height: 300px;
+    margin-left: 490px;
+    margin-top: 170px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    
+}
+
+button{
+    color: azure;
+    background-color: greenyellow;
+    padding: 10px;
+    transition: .15s;
+}
+
+button:hover{
+    box-shadow: 5px 5px 5px black;
+}
+
+.input1 {
+    border-radius: 10px;
+    height: 40px; 
+    width: 250px;
+    transition: .15s;
+}
+
+input:hover {
+    box-shadow: 5px 5px 5px black;
+    
+}
+
+.input2 {
+    border-radius: 10px;
+    height: 40px;
+    width: 250px;
+    margin-bottom: 20px;
+    transition: .15s; 
+}
+
+button{
+    height: 35px;
+    width: 80px;
+    border-radius: 35px;
+    color: black;
+    border: none;
+}
+
+.h2 {   
+    text-align: center;
+    
+    font-size: 50px;
+}
