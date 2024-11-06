@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Simple To-Do List</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        input {
+            width: 70%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            outline: none;
+        }
+        button.add-btn {
+            width: 25%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+        ul {
+            list-style-type: none;
+            margin-top: 20px;
+            padding: 0;
+        }
+        li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .completed {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+        .icon-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        .icon-btn.remove {
+            background-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="logout-container">
+        <a href="/logout" class="logbtn">Logout</a>
+    </div>         
+    <div class="container">
+        <h1>To-Do List</h1>
+        <input type="text" id="taskInput" placeholder="Add a new task...">
+        <button class="add-btn" onclick="addTask()">Add</button>
+
+        <ul id="taskList">
+            <!-- New: Display existing tasks from the database -->
+            {% for task in tasks %}
+                <li data-task-id="{{ task.task_id }}">
+                    {{ task.description }}
+                    <span class="button-container">
+                        <button class="icon-btn edit-btn" onclick="editTask(this)">✏️</button>
+                        <button class="icon-btn remove-btn" onclick="removeTask(this)">🗑️</button>
+                    </span>
+                </li>                        
+            {% endfor %}
+        </ul>
+    </div>
+
+    <script>
+        // New: Function to initiate the editing process
+        // Function to edit tasks
+        function editTask(button) {
+            const listItem = button.closest('li'); // Get the parent <li> element
+            const currentDescription = listItem.firstChild.textContent.trim(); // Get the current task description
+
+            // Create an input field with the current description
+            const inputField = document.createElement('input');
+            inputField.type = 'text';
+            inputField.value = currentDescription;
+            inputField.className = 'edit-input'; // Optional: add a class for styling
+
+            // Create a save button
+            const saveButton = document.createElement('button');
+            saveButton.textContent = 'Save';
+            saveButton.className = 'icon-btn'; // Optional: add a class for styling
+
+            // Replace the task description with the input field and save button
+            listItem.innerHTML = ''; // Clear current content
+            listItem.appendChild(inputField); // Add input field
+            listItem.appendChild(saveButton); // Add save button
+
+            // Event listener for save button
+            saveButton.onclick = function() {
+                const newDescription = inputField.value.trim(); // Get the new description
+                if (newDescription) {
+                    // Call function to update the task in the database
+                    updateTask(listItem, newDescription); // Call the update function
+                } else {
+                    alert("Task description cannot be empty!"); // Alert if empty
+                }
+            };
+        }
+
+        // Function to update the task in the database
+        function updateTask(listItem, newDescription) {
+            const taskId = listItem.getAttribute('data-task-id'); // Assuming you have a data attribute for task ID
+            console.log('Extracted taskId:', taskId);
+            // Send the updated task description to Flask backend to save in database
+            fetch(`/todo/${taskId}`, {
+                method: 'PUT', // Assuming you set up a PUT route in Flask
+                headers: {
+                    'Content-Type': 'application/json' // Ensure the correct content type
+                },
+                body: JSON.stringify({ description: newDescription }) // Send the updated description
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json(); // Parse the JSON response
+            })
+            .then(data => {
+                console.log(data.message); // Log success message from backend
+                // Update the task display
+                listItem.innerHTML = ''; // Clear input field and save button
+                const updatedTaskItem = document.createElement('span'); // Create a new span for task description
+                updatedTaskItem.textContent = newDescription; // Set the updated description
+                listItem.appendChild(updatedTaskItem); // Add updated task description back to list
+                // Add your edit and remove buttons back here if needed
+                listItem.appendChild(createEditButton()); // Function to create edit button
+                listItem.appendChild(createRemoveButton()); // Function to create remove button
+            })
+            .catch(error => console.error('Error:', error)); // Log any errors
+        }
+
+        // Helper function to create the edit button
+        function createEditButton() {
+            const button = document.createElement('button');
+            button.textContent = 'Edit';
+            button.className = 'icon-btn'; // Optional: add a class for styling
+            button.onclick = function() {
+                editTask(button); // Call editTask when clicked
+            };
+            return button;
+        }
+
+        // Helper function to create the remove button
+        function createRemoveButton() {
+            const button = document.createElement('button');
+            button.textContent = 'Remove';
+            button.className = 'icon-btn remove'; // Optional: add a class for styling
+            button.onclick = function() {
+                removeTask(button); // Call removeTask when clicked
+            };
+            return button;
+        }
+
+        function removeTask(button) {
+            const listItem = button.closest('li');  // Finds the closest <li> ancestor
+            const taskId = listItem.getAttribute('data-task-id');
+            console.log(taskId)
+            // Confirm deletion
+            if (confirm('Are you sure you want to delete this task?')) {
+                // Send the delete request to Flask backend
+                fetch(`/todo/${taskId}`, {
+                    method: 'DELETE', // Use DELETE method for task deletion
+                    headers: {
+                        'Content-Type': 'application/json' // Ensure the correct content type
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json(); // Parse the JSON response
+                })
+                .then(data => {
+                    console.log(data.message); // Log success message from backend
+                    // Remove the task from the UI
+                    listItem.remove(); // Remove the task item from the list
+                })
+                .catch(error => console.error('Error:', error)); // Log any errors
+            }
+        }
+
+
+        // Function to add tasks to the list and send them to the backend
+        function addTask() {
+            const taskInput = document.getElementById('taskInput');
+            const taskList = document.getElementById('taskList');
+            console.log('Input value:', taskInput.value);
+            if (taskInput.value.trim() === '') return;  // Prevent adding empty tasks
+
+            const taskTitle = taskInput.value;  // Task to be sent to the backend
+            console.log('Task to be sent:', taskTitle);
+            // Create new list item with task title and buttons
+            const listItem = document.createElement('li');
+            listItem.textContent = taskTitle;
+
+            const editButton = document.createElement('button');
+            editButton.textContent = '✏️'; // Use an icon or label for edit
+            editButton.className = 'icon-btn edit-btn'; // Apply the "edit-btn" styling
+            editButton.onclick = () => editTask(editButton); // Call editTask function
+
+            // Create "Remove" button
+            const removeButton = document.createElement('button');
+            removeButton.textContent = '🗑️'; // Use an icon or label for remove
+            removeButton.className = 'icon-btn remove-btn'; // Apply the "remove-btn" styling
+            removeButton.onclick = () => removeTask(removeButton); // Call removeTask function
+
+            listItem.appendChild(editButton);
+            listItem.appendChild(removeButton);
+            taskList.appendChild(listItem);  // Append new task to the list
+
+            fetch('/todo', {  
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'  
+                },
+                body: JSON.stringify({ description: taskTitle })  
+            })
+            .then(response => response.json())  
+            .then(data => console.log(data.message)) 
+            .catch(error => console.error('Error:', error)); 
+            taskInput.value = '';  
+        }
+    </script>
+</body>
+</html>

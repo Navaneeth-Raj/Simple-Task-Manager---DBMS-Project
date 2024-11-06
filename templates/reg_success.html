@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Successful</title>
+    <link rel="stylesheet" href="">
+    <script>
+        function redirectToLogin() {
+            setTimeout(function() {
+                window.location.href = '/login';  
+            }, 3000);  
+        }
+    </script>
+</head>
+<body onload="redirectToLogin()"> 
+    <div class="message">
+        <h1>{{ username }} has been Registered Successfully!</h1>
+        <p>You will be redirected to the login page shortly.<br>
+        Please Login with the Registered Credentials.</p>
+    </div>
+</body>
+</html>
